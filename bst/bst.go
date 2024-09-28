@@ -40,29 +40,28 @@ func (this BST[T]) NewBalanced() BST[T] {
 		values = append(values, node.Value)
 	}
 
-	var build func(start, end int) (Node[T], bool)
-	build = func(start, end int) (Node[T], bool) {
-		if start > end {
-			return Node[T]{}, false
-		}
-
-		mid := (start + end) / 2
-		root := NewNode(values[mid])
-
-		if left, lexists := build(start, mid-1); lexists {
-			root.Left = &left
-		}
-
-		if right, rexists := build(mid+1, end); rexists {
-			root.Right = &right
-		}
-
-		return root, true
-	}
-
-	root, _ := build(0, len(values)-1)
+	root, _ := FromSortedList(values, 0, len(values)-1)
 
 	return BST[T]{Root: root}
+}
+
+func FromSortedList[T ordered](values []T, start, end int) (Node[T], bool) {
+	if start > end {
+		return Node[T]{}, false
+	}
+
+	mid := (start + end) / 2
+	root := NewNode(values[mid])
+
+	if left, lexists := FromSortedList(values, start, mid-1); lexists {
+		root.Left = &left
+	}
+
+	if right, rexists := FromSortedList(values, mid+1, end); rexists {
+		root.Right = &right
+	}
+
+	return root, true
 }
 
 func (this *Node[T]) Add(value T) {
