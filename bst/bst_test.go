@@ -63,3 +63,23 @@ func TestBST(t *testing.T) {
 		return
 	}
 }
+
+func TestBSTBalanced(t *testing.T) {
+	tree := bst.NewBST(0)
+
+	for i := 1; i < 10; i++ {
+		tree.Add(i)
+	}
+
+	balanced := tree.NewBalanced()
+	expected := []int{4, 1, 0, 2, 3, 7, 5, 6, 8, 9}
+
+	i := 0
+	for node := range balanced.PreOrderSeq() {
+		if node.Value != expected[i] {
+			t.Errorf("TestBSTBalanced(): expected %d, got %d", expected[i], node.Value)
+			return
+		}
+		i++
+	}
+}

@@ -6,35 +6,66 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type ord constraints.Ordered
+type ordered constraints.Ordered
 
-type BSTNode[T ord] struct {
+type Node[T ordered] struct {
 	Value T
-	Left  *BSTNode[T]
-	Right *BSTNode[T]
+	Left  *Node[T]
+	Right *Node[T]
 }
 
-type BST[T ord] struct {
-	Root BSTNode[T]
+type BST[T ordered] struct {
+	Root Node[T]
 }
 
-func NewBST[T ord](value T) BST[T] {
-	return BST[T]{Root: NewBSTNode(value)}
+func NewBST[T ordered](value T) BST[T] {
+	return BST[T]{Root: NewNode(value)}
 }
 
-func NewBSTNode[T ord](value T) BSTNode[T] {
-	return BSTNode[T]{Value: value}
+func NewNode[T ordered](value T) Node[T] {
+	return Node[T]{Value: value}
 }
 
-func (this *BST[T]) Add(value T)                         { this.Root.Add(value) }
-func (this *BST[T]) InOrderSeq() iter.Seq[*BSTNode[T]]   { return this.Root.InOrderSeq() }
-func (this *BST[T]) PostOrderSeq() iter.Seq[*BSTNode[T]] { return this.Root.PostOrderSeq() }
-func (this *BST[T]) PreOrderSeq() iter.Seq[*BSTNode[T]]  { return this.Root.PreOrderSeq() }
-func (this *BST[T]) Search(value T) (*BSTNode[T], bool)  { return this.Root.Search(value) }
-func (this *BST[T]) Min() *BSTNode[T]                    { return this.Root.Min() }
-func (this *BST[T]) Max() *BSTNode[T]                    { return this.Root.Max() }
+func (this *BST[T]) Add(value T)                      { this.Root.Add(value) }
+func (this *BST[T]) InOrderSeq() iter.Seq[*Node[T]]   { return this.Root.InOrderSeq() }
+func (this *BST[T]) PostOrderSeq() iter.Seq[*Node[T]] { return this.Root.PostOrderSeq() }
+func (this *BST[T]) PreOrderSeq() iter.Seq[*Node[T]]  { return this.Root.PreOrderSeq() }
+func (this *BST[T]) Search(value T) (*Node[T], bool)  { return this.Root.Search(value) }
+func (this *BST[T]) Min() *Node[T]                    { return this.Root.Min() }
+func (this *BST[T]) Max() *Node[T]                    { return this.Root.Max() }
 
-func (this *BSTNode[T]) Add(value T) {
+func (this BST[T]) NewBalanced() BST[T] {
+	values := []T{}
+	for node := range this.InOrderSeq() {
+		values = append(values, node.Value)
+	}
+
+	var build func(start, end int) (Node[T], bool)
+	build = func(start, end int) (Node[T], bool) {
+		if start > end {
+			return Node[T]{}, false
+		}
+
+		mid := (start + end) / 2
+		root := NewNode(values[mid])
+
+		if left, lexists := build(start, mid-1); lexists {
+			root.Left = &left
+		}
+
+		if right, rexists := build(mid+1, end); rexists {
+			root.Right = &right
+		}
+
+		return root, true
+	}
+
+	root, _ := build(0, len(values)-1)
+
+	return BST[T]{Root: root}
+}
+
+func (this *Node[T]) Add(value T) {
 	curr := this
 
 	for curr.Value != value {
@@ -44,7 +75,7 @@ func (this *BSTNode[T]) Add(value T) {
 				continue
 			}
 
-			newLeft := NewBSTNode(value)
+			newLeft := NewNode(value)
 			curr.Left = &newLeft
 			break
 		}
@@ -54,13 +85,13 @@ func (this *BSTNode[T]) Add(value T) {
 			continue
 		}
 
-		newRight := NewBSTNode(value)
+		newRight := NewNode(value)
 		curr.Right = &newRight
 		break
 	}
 }
 
-func (this *BSTNode[T]) Min() *BSTNode[T] {
+func (this *Node[T]) Min() *Node[T] {
 	curr := this
 
 	for {
@@ -72,7 +103,7 @@ func (this *BSTNode[T]) Min() *BSTNode[T] {
 	}
 }
 
-func (this *BSTNode[T]) Max() *BSTNode[T] {
+func (this *Node[T]) Max() *Node[T] {
 	curr := this
 
 	for {
@@ -84,10 +115,10 @@ func (this *BSTNode[T]) Max() *BSTNode[T] {
 	}
 }
 
-func (this *BSTNode[T]) InOrderSeq() iter.Seq[*BSTNode[T]] {
-	return func(yield func(*BSTNode[T]) bool) {
+func (this *Node[T]) InOrderSeq() iter.Seq[*Node[T]] {
+	return func(yield func(*Node[T]) bool) {
 		curr := this
-		s := []*BSTNode[T]{}
+		s := []*Node[T]{}
 
 		for curr != nil || len(s) > 0 {
 			for curr != nil {
@@ -107,10 +138,10 @@ func (this *BSTNode[T]) InOrderSeq() iter.Seq[*BSTNode[T]] {
 	}
 }
 
-func (this *BSTNode[T]) PostOrderSeq() iter.Seq[*BSTNode[T]] {
-	return func(yield func(*BSTNode[T]) bool) {
+func (this *Node[T]) PostOrderSeq() iter.Seq[*Node[T]] {
+	return func(yield func(*Node[T]) bool) {
 		curr := this
-		s := []*BSTNode[T]{}
+		s := []*Node[T]{}
 
 		for curr != nil || len(s) > 0 {
 			for curr != nil {
@@ -130,30 +161,28 @@ func (this *BSTNode[T]) PostOrderSeq() iter.Seq[*BSTNode[T]] {
 	}
 }
 
-func (this *BSTNode[T]) PreOrderSeq() iter.Seq[*BSTNode[T]] {
-	return func(yield func(*BSTNode[T]) bool) {
-		s := []*BSTNode[T]{this}
+func (this *Node[T]) PreOrderSeq() iter.Seq[*Node[T]] {
+	return func(yield func(*Node[T]) bool) {
+		s := []*Node[T]{this}
 
 		for len(s) > 0 {
 			curr := s[len(s)-1]
 			s = s[:len(s)-1]
 
+			if curr == nil {
+				continue
+			}
+
 			if !yield(curr) {
 				return
 			}
 
-			if curr.Right != nil {
-				s = append(s, curr.Right)
-			}
-
-			if curr.Left != nil {
-				s = append(s, curr.Left)
-			}
+			s = append(s, curr.Right, curr.Left)
 		}
 	}
 }
 
-func (this *BSTNode[T]) Search(value T) (*BSTNode[T], bool) {
+func (this *Node[T]) Search(value T) (*Node[T], bool) {
 	curr := this
 
 	for {
