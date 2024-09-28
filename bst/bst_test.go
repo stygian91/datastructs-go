@@ -31,6 +31,16 @@ func TestBST(t *testing.T) {
 		i--
 	}
 
+	expected := []int{3, 2, 1, 4, 5}
+	i = 0
+	for node := range tree.PreOrderSeq() {
+		if node.Value != expected[i] {
+			t.Errorf("PreOrderSeq(): expected %d, got %d", expected[i], node.Value)
+			return
+		}
+		i++
+	}
+
 	min := tree.Min().Value
 	if min != 1 {
 		t.Errorf("Min(): expected 1, got %d", min)

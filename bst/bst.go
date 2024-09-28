@@ -29,6 +29,7 @@ func NewBSTNode[T ord](value T) BSTNode[T] {
 func (this *BST[T]) Add(value T)                         { this.Root.Add(value) }
 func (this *BST[T]) InOrderSeq() iter.Seq[*BSTNode[T]]   { return this.Root.InOrderSeq() }
 func (this *BST[T]) PostOrderSeq() iter.Seq[*BSTNode[T]] { return this.Root.PostOrderSeq() }
+func (this *BST[T]) PreOrderSeq() iter.Seq[*BSTNode[T]]  { return this.Root.PreOrderSeq() }
 func (this *BST[T]) Search(value T) (*BSTNode[T], bool)  { return this.Root.Search(value) }
 func (this *BST[T]) Min() *BSTNode[T]                    { return this.Root.Min() }
 func (this *BST[T]) Max() *BSTNode[T]                    { return this.Root.Max() }
@@ -125,6 +126,29 @@ func (this *BSTNode[T]) PostOrderSeq() iter.Seq[*BSTNode[T]] {
 			}
 
 			curr = curr.Left
+		}
+	}
+}
+
+func (this *BSTNode[T]) PreOrderSeq() iter.Seq[*BSTNode[T]] {
+	return func(yield func(*BSTNode[T]) bool) {
+		s := []*BSTNode[T]{this}
+
+		for len(s) > 0 {
+			curr := s[len(s)-1]
+			s = s[:len(s)-1]
+
+			if !yield(curr) {
+				return
+			}
+
+			if curr.Right != nil {
+				s = append(s, curr.Right)
+			}
+
+			if curr.Left != nil {
+				s = append(s, curr.Left)
+			}
 		}
 	}
 }
