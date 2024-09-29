@@ -40,28 +40,55 @@ func (this BST[T]) NewBalanced() BST[T] {
 		values = append(values, node.Value)
 	}
 
-	root, _ := FromSortedList(values, 0, len(values)-1)
+	root := FromSortedList(values)
 
 	return BST[T]{Root: root}
 }
 
-func FromSortedList[T ordered](values []T, start, end int) (Node[T], bool) {
-	if start > end {
-		return Node[T]{}, false
+func FromSortedList[T ordered](values []T) Node[T] {
+	if len(values) == 0 {
+		return Node[T]{}
 	}
 
+	type Frame struct {
+		start, end int
+		node       *Node[T]
+		isLeft     bool
+	}
+
+	start := 0
+	end := len(values) - 1
 	mid := (start + end) / 2
 	root := NewNode(values[mid])
-
-	if left, lexists := FromSortedList(values, start, mid-1); lexists {
-		root.Left = &left
+	s := []Frame{
+		{start: mid + 1, end: end, node: &root, isLeft: false},
+		{start: start, end: mid - 1, node: &root, isLeft: true},
 	}
 
-	if right, rexists := FromSortedList(values, mid+1, end); rexists {
-		root.Right = &right
+	for len(s) > 0 {
+		f := s[len(s)-1]
+		s = s[:len(s)-1]
+
+		if f.start > f.end {
+			continue
+		}
+
+		mid = (f.start + f.end) / 2
+		node := NewNode(values[mid])
+		if f.isLeft {
+			f.node.Left = &node
+		} else {
+			f.node.Right = &node
+		}
+
+		s = append(
+			s,
+			Frame{start: mid + 1, end: f.end, node: &node, isLeft: false},
+			Frame{start: f.start, end: mid - 1, node: &node, isLeft: true},
+		)
 	}
 
-	return root, true
+	return root
 }
 
 func (this *Node[T]) Add(value T) {
