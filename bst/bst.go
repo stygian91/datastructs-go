@@ -3,6 +3,7 @@ package bst
 import (
 	"iter"
 
+	st "github.com/stygian91/datastructs-go/stack"
 	"golang.org/x/exp/constraints"
 )
 
@@ -60,14 +61,14 @@ func FromSortedList[T ordered](values []T) Node[T] {
 	end := len(values) - 1
 	mid := (start + end) / 2
 	root := NewNode(values[mid])
-	s := []Frame{
-		{start: mid + 1, end: end, node: &root, isLeft: false},
-		{start: start, end: mid - 1, node: &root, isLeft: true},
-	}
+	s := st.NewStack[Frame]()
+	s.Push(
+		Frame{start: mid + 1, end: end, node: &root, isLeft: false},
+		Frame{start: start, end: mid - 1, node: &root, isLeft: true},
+	)
 
-	for len(s) > 0 {
-		f := s[len(s)-1]
-		s = s[:len(s)-1]
+	for s.Len() > 0 {
+		f, _ := s.Pop()
 
 		if f.start > f.end {
 			continue
@@ -81,8 +82,7 @@ func FromSortedList[T ordered](values []T) Node[T] {
 			f.node.Right = &node
 		}
 
-		s = append(
-			s,
+		s.Push(
 			Frame{start: mid + 1, end: f.end, node: &node, isLeft: false},
 			Frame{start: f.start, end: mid - 1, node: &node, isLeft: true},
 		)
@@ -144,16 +144,15 @@ func (this *Node[T]) Max() *Node[T] {
 func (this *Node[T]) InOrderSeq() iter.Seq[*Node[T]] {
 	return func(yield func(*Node[T]) bool) {
 		curr := this
-		s := []*Node[T]{}
+		s := st.NewStack[*Node[T]]()
 
-		for curr != nil || len(s) > 0 {
+		for curr != nil || s.Len() > 0 {
 			for curr != nil {
-				s = append(s, curr)
+				s.Push(curr)
 				curr = curr.Left
 			}
 
-			curr = s[len(s)-1]
-			s = s[:len(s)-1]
+			curr, _ = s.Pop()
 
 			if !yield(curr) {
 				return
@@ -167,16 +166,15 @@ func (this *Node[T]) InOrderSeq() iter.Seq[*Node[T]] {
 func (this *Node[T]) PostOrderSeq() iter.Seq[*Node[T]] {
 	return func(yield func(*Node[T]) bool) {
 		curr := this
-		s := []*Node[T]{}
+		s := st.NewStack[*Node[T]]()
 
-		for curr != nil || len(s) > 0 {
+		for curr != nil || s.Len() > 0 {
 			for curr != nil {
-				s = append(s, curr)
+				s.Push(curr)
 				curr = curr.Right
 			}
 
-			curr = s[len(s)-1]
-			s = s[:len(s)-1]
+			curr, _ = s.Pop()
 
 			if !yield(curr) {
 				return
@@ -189,11 +187,10 @@ func (this *Node[T]) PostOrderSeq() iter.Seq[*Node[T]] {
 
 func (this *Node[T]) PreOrderSeq() iter.Seq[*Node[T]] {
 	return func(yield func(*Node[T]) bool) {
-		s := []*Node[T]{this}
+		s := st.NewStack[*Node[T]]()
 
-		for len(s) > 0 {
-			curr := s[len(s)-1]
-			s = s[:len(s)-1]
+		for s.Len() > 0 {
+			curr, _ := s.Pop()
 
 			if curr == nil {
 				continue
@@ -203,7 +200,7 @@ func (this *Node[T]) PreOrderSeq() iter.Seq[*Node[T]] {
 				return
 			}
 
-			s = append(s, curr.Right, curr.Left)
+			s.Push(curr.Right, curr.Left)
 		}
 	}
 }
