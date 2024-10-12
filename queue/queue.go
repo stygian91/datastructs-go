@@ -17,12 +17,16 @@ func (this *Queue[V]) Push(values ...V) {
 }
 
 func (this *Queue[V]) Pop() (V, error) {
-  if len(this.q) == 0 {
-    return *new(V), EmptyQueueError
-  }
+	if len(this.q) == 0 {
+		return *new(V), EmptyQueueError
+	}
 
-  res := this.q[0]
-  this.q = this.q[1:]
+	res := this.q[0]
+	this.q = this.q[1:]
 
-  return res, nil
+	return res, nil
+}
+
+func (this Queue[V]) Len() int {
+	return len(this.q)
 }
