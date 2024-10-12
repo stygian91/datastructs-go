@@ -9,58 +9,64 @@ import (
 
 type ordered constraints.Ordered
 
-type Node[T ordered] struct {
+type NodeValue[T ordered, M any] struct {
 	Value T
-	Left  *Node[T]
-	Right *Node[T]
+	Meta  M
 }
 
-type BST[T ordered] struct {
-	Root Node[T]
+type Node[T ordered, M any] struct {
+	Value T
+	Meta  M
+	Left  *Node[T, M]
+	Right *Node[T, M]
 }
 
-func NewBST[T ordered](value T) BST[T] {
-	return BST[T]{Root: NewNode(value)}
+type BST[T ordered, M any] struct {
+	Root Node[T, M]
 }
 
-func NewNode[T ordered](value T) Node[T] {
-	return Node[T]{Value: value}
+func NewBST[T ordered, M any](value T, meta M) BST[T, M] {
+	return BST[T, M]{Root: NewNode(value, meta)}
 }
 
-func (this *BST[T]) Add(value T)                      { this.Root.Add(value) }
-func (this *BST[T]) InOrderSeq() iter.Seq[*Node[T]]   { return this.Root.InOrderSeq() }
-func (this *BST[T]) PostOrderSeq() iter.Seq[*Node[T]] { return this.Root.PostOrderSeq() }
-func (this *BST[T]) PreOrderSeq() iter.Seq[*Node[T]]  { return this.Root.PreOrderSeq() }
-func (this *BST[T]) Search(value T) (*Node[T], bool)  { return this.Root.Search(value) }
-func (this *BST[T]) Min() *Node[T]                    { return this.Root.Min() }
-func (this *BST[T]) Max() *Node[T]                    { return this.Root.Max() }
+func NewNode[T ordered, M any](value T, meta M) Node[T, M] {
+	return Node[T, M]{Value: value, Meta: meta}
+}
 
-func (this BST[T]) NewBalanced() BST[T] {
-	values := []T{}
+func (this *BST[T, M]) Add(value T, meta M)                 { this.Root.Add(value, meta) }
+func (this *BST[T, M]) InOrderSeq() iter.Seq[*Node[T, M]]   { return this.Root.InOrderSeq() }
+func (this *BST[T, M]) PostOrderSeq() iter.Seq[*Node[T, M]] { return this.Root.PostOrderSeq() }
+func (this *BST[T, M]) PreOrderSeq() iter.Seq[*Node[T, M]]  { return this.Root.PreOrderSeq() }
+func (this *BST[T, M]) Search(value T) (*Node[T, M], bool)  { return this.Root.Search(value) }
+func (this *BST[T, M]) Min() *Node[T, M]                    { return this.Root.Min() }
+func (this *BST[T, M]) Max() *Node[T, M]                    { return this.Root.Max() }
+
+func (this BST[T, M]) NewBalanced() BST[T, M] {
+	values := []NodeValue[T, M]{}
 	for node := range this.InOrderSeq() {
-		values = append(values, node.Value)
+		values = append(values, NodeValue[T, M]{Value: node.Value, Meta: node.Meta})
 	}
 
 	root := FromSortedList(values)
 
-	return BST[T]{Root: root}
+	return BST[T, M]{Root: root}
 }
 
-func FromSortedList[T ordered](values []T) Node[T] {
+func FromSortedList[T ordered, M any](values []NodeValue[T, M]) Node[T, M] {
 	if len(values) == 0 {
-		return Node[T]{}
+		return Node[T, M]{}
 	}
 
 	type Frame struct {
 		start, end int
-		node       *Node[T]
+		node       *Node[T, M]
 		isLeft     bool
 	}
 
 	start := 0
 	end := len(values) - 1
 	mid := (start + end) / 2
-	root := NewNode(values[mid])
+	root := NewNode(values[mid].Value, values[mid].Meta)
 	s := st.NewStack[Frame]()
 	s.Push(
 		Frame{start: mid + 1, end: end, node: &root, isLeft: false},
@@ -75,7 +81,7 @@ func FromSortedList[T ordered](values []T) Node[T] {
 		}
 
 		mid = (f.start + f.end) / 2
-		node := NewNode(values[mid])
+		node := NewNode(values[mid].Value, values[mid].Meta)
 		if f.isLeft {
 			f.node.Left = &node
 		} else {
@@ -91,7 +97,7 @@ func FromSortedList[T ordered](values []T) Node[T] {
 	return root
 }
 
-func (this *Node[T]) Add(value T) {
+func (this *Node[T, M]) Add(value T, meta M) {
 	curr := this
 
 	for curr.Value != value {
@@ -101,7 +107,7 @@ func (this *Node[T]) Add(value T) {
 				continue
 			}
 
-			newLeft := NewNode(value)
+			newLeft := NewNode(value, meta)
 			curr.Left = &newLeft
 			break
 		}
@@ -111,13 +117,13 @@ func (this *Node[T]) Add(value T) {
 			continue
 		}
 
-		newRight := NewNode(value)
+		newRight := NewNode(value, meta)
 		curr.Right = &newRight
 		break
 	}
 }
 
-func (this *Node[T]) Min() *Node[T] {
+func (this *Node[T, M]) Min() *Node[T, M] {
 	curr := this
 
 	for {
@@ -129,7 +135,7 @@ func (this *Node[T]) Min() *Node[T] {
 	}
 }
 
-func (this *Node[T]) Max() *Node[T] {
+func (this *Node[T, M]) Max() *Node[T, M] {
 	curr := this
 
 	for {
@@ -141,10 +147,10 @@ func (this *Node[T]) Max() *Node[T] {
 	}
 }
 
-func (this *Node[T]) InOrderSeq() iter.Seq[*Node[T]] {
-	return func(yield func(*Node[T]) bool) {
+func (this *Node[T, M]) InOrderSeq() iter.Seq[*Node[T, M]] {
+	return func(yield func(*Node[T, M]) bool) {
 		curr := this
-		s := st.NewStack[*Node[T]]()
+		s := st.NewStack[*Node[T, M]]()
 
 		for curr != nil || s.Len() > 0 {
 			for curr != nil {
@@ -163,10 +169,10 @@ func (this *Node[T]) InOrderSeq() iter.Seq[*Node[T]] {
 	}
 }
 
-func (this *Node[T]) PostOrderSeq() iter.Seq[*Node[T]] {
-	return func(yield func(*Node[T]) bool) {
+func (this *Node[T, M]) PostOrderSeq() iter.Seq[*Node[T, M]] {
+	return func(yield func(*Node[T, M]) bool) {
 		curr := this
-		s := st.NewStack[*Node[T]]()
+		s := st.NewStack[*Node[T, M]]()
 
 		for curr != nil || s.Len() > 0 {
 			for curr != nil {
@@ -185,9 +191,9 @@ func (this *Node[T]) PostOrderSeq() iter.Seq[*Node[T]] {
 	}
 }
 
-func (this *Node[T]) PreOrderSeq() iter.Seq[*Node[T]] {
-	return func(yield func(*Node[T]) bool) {
-		s := st.NewStack[*Node[T]]()
+func (this *Node[T, M]) PreOrderSeq() iter.Seq[*Node[T, M]] {
+	return func(yield func(*Node[T, M]) bool) {
+		s := st.NewStack[*Node[T, M]]()
 
 		for s.Len() > 0 {
 			curr, _ := s.Pop()
@@ -205,7 +211,7 @@ func (this *Node[T]) PreOrderSeq() iter.Seq[*Node[T]] {
 	}
 }
 
-func (this *Node[T]) Search(value T) (*Node[T], bool) {
+func (this *Node[T, M]) Search(value T) (*Node[T, M], bool) {
 	curr := this
 
 	for {

@@ -6,17 +6,23 @@ import (
 	"github.com/stygian91/datastructs-go/bst"
 )
 
+type empty struct{}
+
 func TestBST(t *testing.T) {
-	tree := bst.NewBST(3)
-	tree.Add(2)
-	tree.Add(4)
-	tree.Add(1)
-	tree.Add(5)
+	tree := bst.NewBST(3, 3)
+	tree.Add(2, 2)
+	tree.Add(4, 4)
+	tree.Add(1, 1)
+	tree.Add(5, 5)
 
 	i := 1
 	for node := range tree.InOrderSeq() {
 		if node.Value != i {
 			t.Errorf("InOrderSeq(): expected %d, got %d", i, node.Value)
+			return
+		}
+		if node.Meta != i {
+			t.Errorf("InOrderSeq(): expected meta %d, got %d", i, node.Meta)
 			return
 		}
 		i++
@@ -65,10 +71,10 @@ func TestBST(t *testing.T) {
 }
 
 func TestBSTBalanced(t *testing.T) {
-	tree := bst.NewBST(0)
+	tree := bst.NewBST(0, empty{})
 
 	for i := 1; i < 10; i++ {
-		tree.Add(i)
+		tree.Add(i, empty{})
 	}
 
 	balanced := tree.NewBalanced()
