@@ -89,3 +89,33 @@ func TestBSTBalanced(t *testing.T) {
 		i++
 	}
 }
+
+func TestRemoveNode(t *testing.T) {
+	tree := bst.NewBST(0, empty{})
+
+	for i := 1; i < 10; i++ {
+		tree.Add(i, empty{})
+	}
+
+	removedNode, removed := tree.Remove(5)
+	if !removed {
+		t.Error("TestRemoveNode(): did not remove any node")
+		return
+	}
+
+	if removedNode.Value != 5 {
+		t.Errorf("TestRemoveNode(): expected to remove value 5, got %d\n", removedNode.Value)
+		return
+	}
+
+	expected := []int{0, 1, 2, 3, 4, 6, 7, 8, 9}
+	i := 0
+
+	for node := range tree.InOrderSeq() {
+		if node.Value != expected[i] {
+			t.Errorf("TestRemoveNode(): expected %d, got %d", expected[i], node.Value)
+			return
+		}
+		i++
+	}
+}
