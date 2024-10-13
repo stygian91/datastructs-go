@@ -123,15 +123,15 @@ func (this *Node[T, M]) Add(value T, meta M) {
 	}
 }
 
-func (this *BST[T, M]) Remove(value T) (*Node[T, M], bool) {
+func (this *BST[T, M]) Remove(value T) (Node[T, M], bool) {
 	values := []NodeValue[T, M]{}
 	found := false
-	foundNode := &Node[T, M]{}
+	foundNode := Node[T, M]{}
 
 	for node := range this.InOrderSeq() {
 		if !found && node.Value == value {
 			found = true
-			foundNode = node
+			foundNode = *node
 			continue
 		}
 
