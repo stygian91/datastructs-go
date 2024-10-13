@@ -138,8 +138,10 @@ func (this *BST[T, M]) Remove(value T) (*Node[T, M], bool) {
 		values = append(values, NodeValue[T, M]{Value: node.Value, Meta: node.Meta})
 	}
 
-	root := FromSortedList(values)
-	this.Root = root
+	if found {
+		root := FromSortedList(values)
+		this.Root = root
+	}
 
 	return foundNode, found
 }
