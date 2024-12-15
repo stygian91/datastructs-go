@@ -43,7 +43,7 @@ func NewLimitedStack[V any](cap int) LimitedStack[V] {
 }
 
 func (this *LimitedStack[V]) Push(vals ...V) error {
-	if len(this.s) + len(vals) > this.cap {
+	if len(this.s)+len(vals) > this.cap {
 		return StackOverflowError
 	}
 
