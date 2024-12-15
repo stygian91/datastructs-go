@@ -1,6 +1,7 @@
 package set_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stygian91/datastructs-go/set"
@@ -55,5 +56,27 @@ func TestSet(t *testing.T) {
 	}
 	if s.Len() != 0 {
 		t.Fatalf("Expected len: %d, got: %d", 0, s.Len())
+	}
+}
+
+func TestSeq(t *testing.T) {
+	s := set.New[int]()
+	values := []int{1, 2, 3, 42, 69}
+
+	for _, v := range values {
+		s.Add(v)
+	}
+
+	cnt := 0
+	for v := range s.Seq() {
+		if !slices.Contains(values, v) {
+			t.Fatalf("Exptected to find %d", v)
+		}
+
+		cnt++
+	}
+
+	if cnt != len(values) {
+		t.Fatalf("Expected Seq() len to be: %d, got: %d", len(values), cnt)
 	}
 }

@@ -1,5 +1,10 @@
 package set
 
+import (
+	"iter"
+	"maps"
+)
+
 type empty struct{}
 
 type Set[K comparable] struct {
@@ -35,4 +40,8 @@ func (this Set[K]) Contains(el K) bool {
 
 func (this Set[K]) Len() int {
 	return len(this.m)
+}
+
+func (this Set[K]) Seq() iter.Seq[K] {
+	return maps.Keys(this.m)
 }
