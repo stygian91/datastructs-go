@@ -6,17 +6,23 @@ import (
 	"github.com/stygian91/datastructs-go/bst"
 )
 
+type empty struct{}
+
 func TestBST(t *testing.T) {
-	tree := bst.NewBST(3)
-	tree.Add(2)
-	tree.Add(4)
-	tree.Add(1)
-	tree.Add(5)
+	tree := bst.NewBST(3, 3)
+	tree.Add(2, 2)
+	tree.Add(4, 4)
+	tree.Add(1, 1)
+	tree.Add(5, 5)
 
 	i := 1
 	for node := range tree.InOrderSeq() {
 		if node.Value != i {
 			t.Errorf("InOrderSeq(): expected %d, got %d", i, node.Value)
+			return
+		}
+		if node.Meta != i {
+			t.Errorf("InOrderSeq(): expected meta %d, got %d", i, node.Meta)
 			return
 		}
 		i++
@@ -65,10 +71,10 @@ func TestBST(t *testing.T) {
 }
 
 func TestBSTBalanced(t *testing.T) {
-	tree := bst.NewBST(0)
+	tree := bst.NewBST(0, empty{})
 
 	for i := 1; i < 10; i++ {
-		tree.Add(i)
+		tree.Add(i, empty{})
 	}
 
 	balanced := tree.NewBalanced()
@@ -78,6 +84,36 @@ func TestBSTBalanced(t *testing.T) {
 	for node := range balanced.PreOrderSeq() {
 		if node.Value != expected[i] {
 			t.Errorf("TestBSTBalanced(): expected %d, got %d", expected[i], node.Value)
+			return
+		}
+		i++
+	}
+}
+
+func TestRemoveNode(t *testing.T) {
+	tree := bst.NewBST(0, empty{})
+
+	for i := 1; i < 10; i++ {
+		tree.Add(i, empty{})
+	}
+
+	removedNode, removed := tree.Remove(5)
+	if !removed {
+		t.Error("TestRemoveNode(): did not remove any node")
+		return
+	}
+
+	if removedNode.Value != 5 {
+		t.Errorf("TestRemoveNode(): expected to remove value 5, got %d\n", removedNode.Value)
+		return
+	}
+
+	expected := []int{0, 1, 2, 3, 4, 6, 7, 8, 9}
+	i := 0
+
+	for node := range tree.InOrderSeq() {
+		if node.Value != expected[i] {
+			t.Errorf("TestRemoveNode(): expected %d, got %d", expected[i], node.Value)
 			return
 		}
 		i++

@@ -31,42 +31,45 @@ func (this Stack[V]) Len() int {
 	return len(this.s)
 }
 
-type LimitedStack[V any] struct {
-	s   []V
-	cap int
+type SizedStack[V any] struct {
+	s      []V
+	i, cap int
 }
 
 var StackOverflowError = fmt.Errorf("Trying to push to a full stack.")
 
-func NewLimitedStack[V any](cap int) LimitedStack[V] {
-	return LimitedStack[V]{cap: cap, s: []V{}}
+func NewSizedStack[V any](cap int) SizedStack[V] {
+	return SizedStack[V]{i: 0, cap: cap, s: make([]V, cap)}
 }
 
-func (this *LimitedStack[V]) Push(vals ...V) error {
-	if len(this.s)+len(vals) > this.cap {
-		return StackOverflowError
-	}
+func (this *SizedStack[V]) Push(vals ...V) error {
+	for _, val := range vals {
+		if this.i >= this.cap {
+			return StackOverflowError
+		}
 
-	this.s = append(this.s, vals...)
+		this.s[this.i] = val
+		this.i++
+	}
 
 	return nil
 }
 
-func (this *LimitedStack[V]) Pop() (V, error) {
-	if len(this.s) == 0 {
+func (this *SizedStack[V]) Pop() (V, error) {
+	if this.i == 0 {
 		return *new(V), EmptyStackError
 	}
 
-	res := this.s[len(this.s)-1]
-	this.s = this.s[:len(this.s)-1]
+	res := this.s[this.i-1]
+	this.i--
 
 	return res, nil
 }
 
-func (this LimitedStack[V]) Len() int {
-	return len(this.s)
+func (this SizedStack[V]) Len() int {
+	return this.i
 }
 
-func (this LimitedStack[V]) Cap() int {
+func (this SizedStack[V]) Cap() int {
 	return this.cap
 }
