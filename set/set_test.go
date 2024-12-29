@@ -80,3 +80,31 @@ func TestSeq(t *testing.T) {
 		t.Fatalf("Expected Seq() len to be: %d, got: %d", len(values), cnt)
 	}
 }
+
+func TestMerge(t *testing.T) {
+	sa := set.New[int]()
+	sb := set.New[int]()
+	a := []int{1, 2, 3, 6}
+	b := []int{3, 4, 5, 6}
+
+	for _, v := range a {
+		sa.Add(v)
+	}
+
+	for _, v := range b {
+		sb.Add(v)
+	}
+
+	sa.Merge(sb)
+
+	if sa.Len() != 6 {
+		t.Errorf("Merge len mismatch - expected: %d, got %d\n", 6, sa.Len())
+	}
+
+	exp := []int{1, 2, 3, 4, 5, 6}
+	for _, v := range exp {
+		if !sa.Contains(v) {
+			t.Errorf("Value %d not found in set after merge\n", v)
+		}
+	}
+}

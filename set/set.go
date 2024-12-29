@@ -45,3 +45,9 @@ func (this Set[K]) Len() int {
 func (this Set[K]) Seq() iter.Seq[K] {
 	return maps.Keys(this.m)
 }
+
+func (this *Set[K]) Merge(other Set[K]) {
+	for v := range other.Seq() {
+		this.m[v] = empty{}
+	}
+}
